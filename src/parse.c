@@ -23,7 +23,14 @@ static void parse_edge_if_body(quosiParseCtx* ctx, quosiEdgeBlock** result, bool
 static void parse_edge_match(quosiParseCtx* ctx, quosiEdgeMatch* result);
 static void parse_effect(quosiParseCtx* ctx, quosiEffect** result);
 
-// #define contains_key(map, key) (map.find(key) != map.end())
+static bool contains_key(quosiNamedVertex* verts, quosiStrView str) {
+    for (size_t i = 0; i < quosids_arrlenu(verts); i++) {
+        if (verts[i].name.len == str.len && strncmp(verts[i].name.ptr, str.ptr, str.len) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
 
 
 quosiAst quosi_ast_parse_from_src(const char* src, quosiError* errors, quosiAllocator alloc) {
@@ -34,8 +41,7 @@ quosiAst quosi_ast_parse_from_src(const char* src, quosiError* errors, quosiAllo
         .edges=NULL,
     };
     quosiParseCtx* ctx = &context;
-    quosiAst result;
-    result.modules = NULL;
+    quosiAst result = { 0 };
 
     quosiToken n = TNEXT(&ctx->tokens);
     while (n.type != QUOSI_TOKEN_EOF) {
@@ -45,14 +51,12 @@ quosiAst quosi_ast_parse_from_src(const char* src, quosiError* errors, quosiAllo
         const quosiToken name = TNEXT(&ctx->tokens);
         EH_CHECK_RET(name, IDENT, BAD_GRAPH_BEGIN);
 
-        quosiGraph* graph = quosids_arraddnptr(result.modules, 1);
-        graph->name = name.value;
-        graph->vertices = NULL;
+        quosids_arrpush(result.modules, (quosiGraph){ .name=name.value });
+        quosiGraph* graph = &quosids_arrlast(result.modules);
         parse_graph(ctx, graph);
         EH_PROP_RET();
         n = TNEXT(&ctx->tokens);
     }
-    quosids_arrfree(context.edges);
 
     return result;
 }
@@ -63,7 +67,7 @@ static void parse_graph(quosiParseCtx* ctx, quosiGraph* result) {
         // rename INIT => NEW
         if (n.type == QUOSI_TOKEN_KEYWORD) {
             if (STREQ(n.value, "endmod")) {
-                return;
+                goto happypath;
             } else if (!STREQ(n.value, "rename")) {
                 EH_FAIL(n, BAD_VERTEX_BEGIN);
             }
@@ -83,32 +87,35 @@ static void parse_graph(quosiParseCtx* ctx, quosiGraph* result) {
         n = TNEXT(&ctx->tokens);
         EH_CHECK(n, SETEQ, MISPLACED_TOKEN);
 
-        quosids_arrpush(result->vertices, ((quosiNamedVertex){ name.value, { 0 } }));
+        if (contains_key(result->vertices, name.value)) EH_FAIL(name, DUPLICATE_VERTEX);
+        quosids_arrpush(result->vertices, ((quosiNamedVertex){ .name=name.value }));
         quosiVertexBlock* vert = &quosids_arrlast(result->vertices).data;
-        // if (contains_key(result.vert_names, vert.first)) EH_FAIL(name, DUPLICATE_VERTEX);
         parse_vert_if_body(ctx, vert);
         EH_PROP();
         n = TNEXT(&ctx->tokens);
     }
 
-    // if (!contains_key(result.vert_names, "START")) EH_FAIL(n, NO_ENTRY);
-    // for (const auto& edge : ctx.edges) {
-    //     if (STREQ(edge.value, "START") || STREQ(edge.value, "EXIT")) continue;
-    //     const auto e = edge.value;
-    //     if (!contains_key(result.vert_names, e)) {
-    //          EH_FAIL(edge, DANGLING_EDGE);
-    //     }
-    // }
-
     EH_FAIL(n, EARLY_EOF);
+
+happypath:
+    if (!contains_key(result->vertices, (quosiStrView){ .ptr="START", .len=sizeof("START")-1 })) EH_FAIL(n, NO_ENTRY);
+    for (size_t i = 0; i < quosids_arrlenu(ctx->edges); i++) {
+        const quosiToken edge = ctx->edges[i];
+        if (STREQ(edge.value, "START") || STREQ(edge.value, "EXIT")) continue;
+        if (!contains_key(result->vertices, edge.value)) {
+             EH_FAIL(edge, DANGLING_EDGE);
+        }
+    }
+
+    quosids_arrfree(ctx->edges);
 }
 
 static void parse_vert(quosiParseCtx* ctx, quosiVertex* result) {
     quosiToken n = TNEXT(&ctx->tokens);
     while (n.type == QUOSI_TOKEN_LTH) {
         // <IDENT:
-        quosiVertexLineSet* lines = quosids_arraddnptr(result->lineset, 1);
-        lines->lines = NULL;
+        quosids_arrpush(result->lineset, (quosiVertexLineSet){ 0 });
+        quosiVertexLineSet* lines = &quosids_arrlast(result->lineset);
         n = TNEXT(&ctx->tokens);
         EH_CHECK(n, IDENT, UNKNOWN);
         lines->speaker = n.value;
@@ -140,7 +147,6 @@ endlines:
     case QUOSI_TOKEN_JOIN:
         // :: (EFFS) => IDENT
         result->type = QUOSI_VERTEX_JUMP;
-        result->v.jump.effects = NULL;
         parse_effect(ctx, &result->v.jump.effects);
         EH_PROP();
         n = TNEXT(&ctx->tokens);
@@ -176,7 +182,8 @@ endlines:
 static void parse_vert_if(quosiParseCtx* ctx, quosiVertexIfElse* result) {
     quosiToken n = TNEXT(&ctx->tokens);
     while (n.type != QUOSI_TOKEN_EOF) {
-        quosiVertexIfElseBlock* block = quosids_arraddnptr(result->blocks, 1);
+        quosids_arrpush(result->blocks, (quosiVertexIfElseBlock){ 0 });
+        quosiVertexIfElseBlock* block = &quosids_arrlast(result->blocks);
 
         // if (EXPR) then
         n = TPEEK(&ctx->tokens);
@@ -188,6 +195,7 @@ static void parse_vert_if(quosiParseCtx* ctx, quosiVertexIfElse* result) {
         if (!STREQ(n.value, "then")) EH_FAIL(n, UNKNOWN);
 
         block->data = quosi_allocator_allocate(ctx->alloc, sizeof(quosiVertexBlock));
+        *block->data = (quosiVertexBlock){ 0 };
         parse_vert_if_body(ctx, block->data);
         EH_PROP();
 
@@ -199,6 +207,7 @@ static void parse_vert_if(quosiParseCtx* ctx, quosiVertexIfElse* result) {
                 continue;
             } else {
                 result->catchall = quosi_allocator_allocate(ctx->alloc, sizeof(quosiVertexBlock));
+                *result->catchall = (quosiVertexBlock){ 0 };
                 parse_vert_if_body(ctx, result->catchall);
                 n = TNEXT(&ctx->tokens);
                 EH_CHECK(n, KEYWORD, UNCLOSED_CONDITIONAL);
@@ -219,18 +228,14 @@ static void parse_vert_if_body(quosiParseCtx* ctx, quosiVertexBlock* result) {
     case QUOSI_TOKEN_KEYWORD:
         if (STREQ(n.value, "match")) {
             result->tag = QUOSI_VBLOCK_MATCH;
-            result->value.match.arms = NULL;
             parse_vert_match(ctx, &result->value.match);
         } else if (STREQ(n.value, "if")) {
             result->tag = QUOSI_VBLOCK_IFELSE;
-            result->value.ifelse.blocks = NULL;
             parse_vert_if(ctx, &result->value.ifelse);
         }
         break;
     case QUOSI_TOKEN_LTH:
         result->tag = QUOSI_VBLOCK_T;
-        result->value.vertex.lineset = NULL;
-        result->value.vertex.v.edges = NULL;
         parse_vert(ctx, &result->value.vertex);
         break;
 
@@ -266,20 +271,19 @@ static void parse_vert_match(quosiParseCtx* ctx, quosiVertexMatch* result) {
             if (TPEEK(&ctx->tokens).type == QUOSI_TOKEN_CATCHALL) {
                 TNEXT(&ctx->tokens);
                 if (has_catchall) EH_FAIL(n, DUPLICATE_CASE);
-                result->catchall = (quosiVertex){ 0 };
                 arm_vert = &result->catchall;
                 has_catchall = true;
             } else {
-                quosiVertexMatchArm* arm = quosids_arraddnptr(result->arms, 1);
+                quosids_arrpush(result->arms, (quosiVertexMatchArm){ 0 });
+                quosiVertexMatchArm* arm = &quosids_arrlast(result->arms);
                 quosi_internal_parse_value(ctx, &arm->cond);
+                EH_PROP();
                 arm_vert = &arm->body;
             }
             n = TNEXT(&ctx->tokens);
             EH_CHECK(n, CLOSEPAREN, UNCLOSED_PAREN);
             n = TPEEK(&ctx->tokens);
             EH_CHECK(n, LTH, UNKNOWN);
-            arm_vert->lineset = NULL;
-            arm_vert->v.edges = NULL;
             parse_vert(ctx, arm_vert);
             EH_PROP();
             break; }
@@ -322,7 +326,8 @@ static void parse_edge(quosiParseCtx* ctx, quosiEdge* result) {
 static void parse_edge_if(quosiParseCtx* ctx, quosiEdgeIfElse* result) {
     quosiToken n = TNEXT(&ctx->tokens);
     while (n.type != QUOSI_TOKEN_EOF) {
-        quosiEdgeIfElseBlock* block = quosids_arraddnptr(result->blocks, 1);
+        quosids_arrpush(result->blocks, (quosiEdgeIfElseBlock){ 0 });
+        quosiEdgeIfElseBlock* block = &quosids_arrlast(result->blocks);
 
         // if (EXPR) then
         n = TPEEK(&ctx->tokens);
@@ -333,7 +338,6 @@ static void parse_edge_if(quosiParseCtx* ctx, quosiEdgeIfElse* result) {
         EH_CHECK(n, KEYWORD, UNKNOWN);
         if (!STREQ(n.value, "then")) EH_FAIL(n, UNKNOWN);
 
-        block->body = NULL;
         parse_edge_if_body(ctx, &block->body, false);
         EH_PROP();
 
@@ -374,16 +378,12 @@ static void parse_edge_if_body(quosiParseCtx* ctx, quosiEdgeBlock** result, bool
             break;
         case QUOSI_TOKEN_KEYWORD:
             if (STREQ(n.value, "match")) {
-                quosiEdgeBlock* ref = quosids_arraddnptr(*result, 1);
-                ref->tag = QUOSI_EBLOCK_MATCH;
-                ref->value.match.arms = NULL;
-                ref->value.match.catchall.exists = false;
+                quosids_arrpush(*result, (quosiEdgeBlock){ .tag=QUOSI_EBLOCK_MATCH });
+                quosiEdgeBlock* ref = &quosids_arrlast(*result);
                 parse_edge_match(ctx, &ref->value.match);
             } else if (STREQ(n.value, "if")) {
-                quosiEdgeBlock* ref = quosids_arraddnptr(*result, 1);
-                ref->tag = QUOSI_EBLOCK_IFELSE;
-                ref->value.ifelse.blocks = NULL;
-                ref->value.ifelse.catchall = NULL;
+                quosids_arrpush(*result, (quosiEdgeBlock){ .tag=QUOSI_EBLOCK_IFELSE });
+                quosiEdgeBlock* ref = &quosids_arrlast(*result);
                 parse_edge_if(ctx, &ref->value.ifelse);
             } else if (STREQ(n.value, "else") || STREQ(n.value, "end")) {
                 if (!top) {
@@ -396,13 +396,11 @@ static void parse_edge_if_body(quosiParseCtx* ctx, quosiEdgeBlock** result, bool
             break;
         case QUOSI_TOKEN_STRLIT:
             if (!last_was_edge) {
-                quosiEdgeBlock* ref = quosids_arraddnptr(*result, 1);
-                ref->tag = QUOSI_EBLOCK_T;
-                ref->value.edges = NULL;
+                quosids_arrpush(*result, (quosiEdgeBlock){ .tag=QUOSI_EBLOCK_T });
             }
             quosiEdgeBlock* ref = &quosids_arrlast(*result);
-            quosiEdge* edge = quosids_arraddnptr(ref->value.edges, 1);
-            edge->effects = NULL;
+            quosids_arrpush(ref->value.edges, (quosiEdge){ 0 });
+            quosiEdge* edge = &quosids_arrlast(ref->value.edges);
             parse_edge(ctx, edge);
             last_was_edge = true;
             break;
@@ -443,7 +441,8 @@ static void parse_edge_match(quosiParseCtx* ctx, quosiEdgeMatch* result) {
                 result->catchall.exists = true;
                 arm_es = &result->catchall.arm;
             } else {
-                quosiEdgeMatchArm* arm = quosids_arraddnptr(result->arms, 1);
+                quosids_arrpush(result->arms, (quosiEdgeMatchArm){ 0 });
+                quosiEdgeMatchArm* arm = &quosids_arrlast(result->arms);
                 quosi_internal_parse_value(ctx, &arm->cond);
                 arm_es = &arm->body;
             }
@@ -472,9 +471,8 @@ static void parse_effect(quosiParseCtx* ctx, quosiEffect** result) {
     n = TNEXT(&ctx->tokens);
     while (n.type != QUOSI_TOKEN_CLOSEPAREN) {
         EH_CHECK(n, IDENT, INVALID_ASSIGN);
-        quosiEffect* effect = quosids_arraddnptr(*result, 1);
-        effect->lhs = n.value;
-        effect->op = QUOSI_EFFECT_EVENT;
+        quosids_arrpush(*result, ((quosiEffect){ .lhs=n.value, .op=QUOSI_EFFECT_EVENT }));
+        quosiEffect* effect = &quosids_arrlast(*result);
 
         n = TNEXT(&ctx->tokens);
         switch (n.type) {

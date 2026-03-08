@@ -48,7 +48,7 @@ typedef struct quosiVertexBlock   quosiVertexBlock;
 
 
 struct quosiExpr {
-    enum quosiExprType { QUOSI_EXPR_IDENT, QUOSI_EXPR_IMM, QUOSI_EXPR_OP } tag;
+    enum quosiExprType { QUOSI_EXPR_IDENT=0, QUOSI_EXPR_IMM, QUOSI_EXPR_OP } tag;
     union {
         quosiStrView ident;
         uint64_t imm;
@@ -59,7 +59,7 @@ struct quosiExpr {
 };
 
 struct quosiEffect {
-    enum quosiEffectType { QUOSI_EFFECT_ADD, QUOSI_EFFECT_SUB, QUOSI_EFFECT_MUL, QUOSI_EFFECT_DIV, QUOSI_EFFECT_SET, QUOSI_EFFECT_EVENT } op;
+    enum quosiEffectType { QUOSI_EFFECT_EVENT=0, QUOSI_EFFECT_ADD, QUOSI_EFFECT_SUB, QUOSI_EFFECT_MUL, QUOSI_EFFECT_DIV, QUOSI_EFFECT_SET } op;
     quosiStrView lhs;
     quosiExpr rhs;
 };
@@ -74,7 +74,7 @@ struct quosiVertexLineSet {
 struct quosiVertex {
     // vector
     quosiVertexLineSet* lineset;
-    enum quosiVectorType { QUOSI_VERTEX_CHOICE, QUOSI_VERTEX_JUMP } type;
+    enum quosiVectorType { QUOSI_VERTEX_CHOICE=0, QUOSI_VERTEX_JUMP } type;
     union {
         // vector
         quosiEdgeBlock* edges;
@@ -148,7 +148,7 @@ struct quosiEdgeMatch {
 
 
 struct quosiVertexBlock {
-    enum quosiVblockType { QUOSI_VBLOCK_T, QUOSI_VBLOCK_MATCH, QUOSI_VBLOCK_IFELSE } tag;
+    enum quosiVblockType { QUOSI_VBLOCK_T=0, QUOSI_VBLOCK_MATCH, QUOSI_VBLOCK_IFELSE } tag;
     union {
         quosiVertex vertex;
         quosiVertexMatch match;
@@ -157,7 +157,7 @@ struct quosiVertexBlock {
 };
 
 struct quosiEdgeBlock {
-    enum quosiEblockType { QUOSI_EBLOCK_T, QUOSI_EBLOCK_MATCH, QUOSI_EBLOCK_IFELSE } tag;
+    enum quosiEblockType { QUOSI_EBLOCK_T=0, QUOSI_EBLOCK_MATCH, QUOSI_EBLOCK_IFELSE } tag;
     union {
         // vector
         quosiEdge* edges;

@@ -4,6 +4,7 @@
 #define VANGO_BENCH_WARMUP 1000
 #define VANGO_TEST_ROOT
 #include <vangotest/casserts2.h>
+#include <vangotest/bench.h>
 #include "quosi/quosi.h"
 #include "quosi/vm.h"
 #include <stdlib.h>
@@ -34,6 +35,22 @@ vango_test(cmp_example) {
     // quosi_file_prettyprint(file, "Default", stdout);
     free(file);
 }
+
+vango_test(free_on_err) {
+    char* src = "module Op START = if (a ? 25) then <Brian: \"Hello there.\"> => EXIT else <Brian: \"Byebye.\"> => EXIT end endmod";
+    quosiError errors = { 0 };
+    quosiFile* file = NULL;
+
+    vango_bench(10000, {
+        free(file);
+        file = quosi_file_compile_from_src(src, &errors, dummy_ctx, quosi_malloc_allocator());
+        quosi_error_list_free(&errors);
+    });
+
+    vg_assert_null(file);
+    free(file);
+}
+
 
 /*
 vango_test(run_example) {
