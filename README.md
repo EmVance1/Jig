@@ -36,12 +36,12 @@ endmod
 ```
 
 ## Installation
-Jig compiles and links to your project out of the box with my build system [Vango](https://github.com/EmVance1/Vango). A Makefile is also provided to build a static library, although really it is as easy as compiling everything in `src`, adding `include` as an include. For vim/nvim users, the file `qsi.vim` is provided to enable basic syntax highlighting.
+Jig compiles and links to your project out of the box with my build system [Vango](https://github.com/EmVance1/Vango). A Makefile is also provided to build a static library, although really it is as easy as compiling everything in `src`, adding `include` as an include. For vim/nvim users, the file `jig.vim` is provided to enable basic syntax highlighting.
 
 ## Project Integration
 Integrating the library into your project is equally easy. The core API consists of just 3 functions - compile, load, execute. The compiled binary format can be saved and loaded completely as is, meaning all compilation can be done ahead of time to negate load times. Below is already a complete example of what your usual skeleton may look like (see `test/test.c` for a complete CLI example). Jig works by emitting events - upcalls - from the `exec` function. These generally occur whenever player input is expected, such as choosing dialogue options (see docs for detailed communication with the vm), but user defined events may also occur.
 ```c
-char* src = read_to_string("examples/NPCs.qsi");
+char* src = read_to_string("examples/NPCs.jig");
 jigError errors = { 0 };
 jigFile* file = jig_file_compile_from_src(src, &errors, varkey_ctx, jig_malloc_allocator());
 free(src);
