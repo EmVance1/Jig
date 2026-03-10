@@ -8,7 +8,7 @@ syn match   Constant   /[0-9]\+/    contained
 syn match   String     /"\([^\\"]\?\(\\[\\"tn]\)\?\)*"/
 syn match   Comment    /#.*\n/
 
-syn keyword Macro        rename module endmod
+syn keyword Macro        rename database as module endmod
 syn keyword Constant     true false inf _
 syn keyword Conditional  if then else match with end
 syn keyword Error        START EXIT
