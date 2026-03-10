@@ -45,6 +45,7 @@ typedef struct jigToken {
         JIG_TOKEN_COLON,
         JIG_TOKEN_JOIN,
         JIG_TOKEN_CATCHALL,
+        JIG_TOKEN_DBAT,
 
         JIG_TOKEN_IDENT,
         JIG_TOKEN_NUMBER,

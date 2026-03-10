@@ -172,9 +172,16 @@ typedef struct jigNamedVertex {
     jigVertexBlock data;
 } jigNamedVertex;
 
+typedef struct jigDatabase {
+    jigStrView name;
+    jigStrView alias;
+} jigDatabase;
+
 
 typedef struct jigGraph {
     jigStrView name;
+    // vector
+    jigDatabase* databases;
     // vector
     jigNamedVertex* vertices;
     // std::pmr::unordered_map<std::string_view, std::string_view> rename_table;

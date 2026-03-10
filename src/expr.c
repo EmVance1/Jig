@@ -75,10 +75,13 @@ void jig_internal_parse_value(jigParseCtx* ctx, jigExpr* result) {
 
     case JIG_TOKEN_KEYWORD:
         if (STREQ(n.value, "true")) {
-            result->value.imm = (uint64_t)1;
+            result->value.imm = 1;
             result->tag = JIG_EXPR_IMM;
         } else if (STREQ(n.value, "false")) {
-            result->value.imm = (uint64_t)0;
+            result->value.imm = 0;
+            result->tag = JIG_EXPR_IMM;
+        } else if (STREQ(n.value, "inf")) {
+            result->value.imm = UINT64_MAX;
             result->tag = JIG_EXPR_IMM;
         } else {
             EH_FAIL(n, INVALID_ATOM);

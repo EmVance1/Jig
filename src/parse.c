@@ -64,22 +64,35 @@ jigAst jig_ast_parse_from_src(const char* src, jigError* errors, jigAllocator al
 static void parse_graph(jigParseCtx* ctx, jigGraph* result) {
     jigToken n = TNEXT(&ctx->tokens);
     while (n.type != JIG_TOKEN_EOF) {
-        // rename INIT => NEW
         if (n.type == JIG_TOKEN_KEYWORD) {
             if (STREQ(n.value, "endmod")) {
                 goto happypath;
-            } else if (!STREQ(n.value, "rename")) {
+            // rename SPEAKER as ALIAS
+            } else if (STREQ(n.value, "rename")) {
+                const jigToken init = TNEXT(&ctx->tokens);
+                EH_CHECK(init, IDENT, BAD_RENAME);
+                n = TNEXT(&ctx->tokens);
+                EH_CHECK(n, KEYWORD, BAD_RENAME);
+                if (STREQ(n.value, "as")) EH_FAIL(n, BAD_RENAME);
+                const jigToken alias = TNEXT(&ctx->tokens);
+                EH_CHECK(alias, IDENT, BAD_RENAME);
+                // result.rename_table.emplace(rend.value, init.value);
+                n = TNEXT(&ctx->tokens); // FOLLOWS(rename)
+                continue;
+            // database NAME as ALIAS
+            } else if (STREQ(n.value, "database")) {
+                const jigToken name = TNEXT(&ctx->tokens);
+                EH_CHECK(name, IDENT, BAD_RENAME);
+                n = TNEXT(&ctx->tokens);
+                if (STREQ(n.value, "as")) EH_FAIL(n, BAD_RENAME);
+                const jigToken alias = TNEXT(&ctx->tokens);
+                EH_CHECK(alias, IDENT, BAD_RENAME);
+                jigds_arrpush(result->databases, ((jigDatabase){ .name=name.value, .alias=alias.value }));
+                n = TNEXT(&ctx->tokens); // FOLLOWS(database)
+                continue;
+            } else {
                 EH_FAIL(n, BAD_VERTEX_BEGIN);
             }
-            const jigToken init = TNEXT(&ctx->tokens); // n = <INIT>
-            EH_CHECK(init, IDENT, BAD_RENAME);
-            n = TNEXT(&ctx->tokens);
-            EH_CHECK(n, ARROW, BAD_RENAME);
-            const jigToken rend = TNEXT(&ctx->tokens); // n = <NEW>
-            EH_CHECK(rend, IDENT, BAD_RENAME);
-            // result.rename_table.emplace(rend.value, init.value);
-            n = TNEXT(&ctx->tokens); // FOLLOW(rename)
-            continue;
         }
         // IDENT =
         EH_CHECK(n, IDENT, BAD_VERTEX_BEGIN);

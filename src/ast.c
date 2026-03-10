@@ -121,6 +121,7 @@ static void jig_vertblock_free(jigVertexBlock* block, jigAllocator alloc) {
 }
 
 static void jig_graph_free(jigGraph* graph, jigAllocator alloc) {
+    jigds_arrfree(graph->databases);
     for (size_t i = 0; i < jigds_arrlenu(graph->vertices); i++) {
         jig_vertblock_free(&graph->vertices[i].data, alloc);
     }

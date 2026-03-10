@@ -17,19 +17,20 @@ static bool is_space(char c, bool* wasnull) {
 }
 static bool is_keyword(jigStrView str) {
 #define STREQ(view, cptr) ((view.len == sizeof(cptr)-1) && (strncmp(view.ptr, cptr, view.len) == 0))
-    if (STREQ(str, "if"))     return true;
-    if (STREQ(str, "then"))   return true;
-    if (STREQ(str, "else"))   return true;
-    if (STREQ(str, "match"))  return true;
-    if (STREQ(str, "with"))   return true;
-    if (STREQ(str, "end"))    return true;
-    if (STREQ(str, "true"))   return true;
-    if (STREQ(str, "false"))  return true;
-    if (STREQ(str, "inf"))    return true;
-    if (STREQ(str, "rename")) return true;
-    if (STREQ(str, "module")) return true;
-    if (STREQ(str, "endmod")) return true;
-    return false;
+    return (STREQ(str, "if"))
+        || (STREQ(str, "then"))
+        || (STREQ(str, "else"))
+        || (STREQ(str, "match"))
+        || (STREQ(str, "with"))
+        || (STREQ(str, "end"))
+        || (STREQ(str, "true"))
+        || (STREQ(str, "false"))
+        || (STREQ(str, "inf"))
+        || (STREQ(str, "module"))
+        || (STREQ(str, "endmod"))
+        || (STREQ(str, "rename"))
+        || (STREQ(str, "database"))
+        || (STREQ(str, "as"));
 }
 
 
@@ -106,6 +107,7 @@ static jigToken _impl_step(jigTokenStream* self) {
                 case '{': return (jigToken){ .type=JIG_TOKEN_OPENBRACE,  .value={ tbeg, 1 }, .span=tspan };
                 case '}': return (jigToken){ .type=JIG_TOKEN_CLOSEBRACE, .value={ tbeg, 1 }, .span=tspan };
                 case ',': return (jigToken){ .type=JIG_TOKEN_COMMA,      .value={ tbeg, 1 }, .span=tspan };
+                case '@': return (jigToken){ .type=JIG_TOKEN_DBAT,       .value={ tbeg, 1 }, .span=tspan };
                 case '+': case '-': case '*': case '/': case '<': case '>': case '=': case '!': case '&': case '|': case ':':
                     self->state = LSTATE_SYMBOL; break;
                 case '"':
@@ -113,7 +115,7 @@ static jigToken _impl_step(jigTokenStream* self) {
                 case '#':
                     self->state = LSTATE_COMMENT; break;
                 default:
-                    return (jigToken){ .type=JIG_TOKEN_ERROR, .value={ "unknown symbol encountered", 0 }, .span=tspan };
+                    return (jigToken){ .type=JIG_TOKEN_ERROR, .value=JIG_STRVIEW("invalid token"), .span=tspan };
                 }
             }
             break;
@@ -183,7 +185,7 @@ static jigToken _impl_step(jigTokenStream* self) {
                 case '=': return (jigToken){ .type=JIG_TOKEN_EQU,   .value={ tbeg, 2 }, .span=tspan };
                 case '!': return (jigToken){ .type=JIG_TOKEN_NEQ,   .value={ tbeg, 2 }, .span=tspan };
                 default:
-                    return (jigToken){ .type=JIG_TOKEN_ERROR, .value={ "unknown double glyph encountered", 0 }, .span=tspan };
+                    return (jigToken){ .type=JIG_TOKEN_ERROR, .value=JIG_STRVIEW("invalid token"), .span=tspan };
                 }
             } else if (c == '&' && *tbeg == '&') {
                 self->pos = p;
@@ -210,9 +212,9 @@ static jigToken _impl_step(jigTokenStream* self) {
                 case '!': return (jigToken){ .type=JIG_TOKEN_LOGNOT, .value={ tbeg, 1 }, .span=tspan };
                 case ':': return (jigToken){ .type=JIG_TOKEN_COLON,  .value={ tbeg, 1 }, .span=tspan };
                 case '&': case '|':
-                    return (jigToken){ .type=JIG_TOKEN_ERROR,   .value={ "unknown double glyph encountered", 0 }, .span=tspan };
+                    return (jigToken){ .type=JIG_TOKEN_ERROR,   .value=JIG_STRVIEW("invalid token"), .span=tspan };
                 default:
-                    return (jigToken){ .type=JIG_TOKEN_MYFAULT, .value={ "CODING ERROR: switch should never default", 0 }, .span=tspan };
+                    return (jigToken){ .type=JIG_TOKEN_MYFAULT, .value=JIG_STRVIEW("CODING ERROR: switch should never default"), .span=tspan };
                 }
             }
             break;

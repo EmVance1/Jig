@@ -10,6 +10,8 @@ typedef struct jigStrView {
     size_t len;
 } jigStrView;
 
+#define JIG_STRVIEW(s) ((jigStrView){ .ptr=s, .len=sizeof(s)-1 })
+
 typedef struct jigErrorSpan {
     uint32_t row;
     uint32_t col;
