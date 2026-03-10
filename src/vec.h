@@ -1,35 +1,35 @@
-#ifndef CQUOSI_IMPL_VEC_H
-#define CQUOSI_IMPL_VEC_H
-#include "quosi/quosi.h"
+#ifndef CJIG_IMPL_VEC_H
+#define CJIG_IMPL_VEC_H
+#include "jig/jig.h"
 
 
-typedef struct quosiDynArrayHeader {
+typedef struct jigDynArrayHeader {
     size_t len;
     size_t cap;
-} quosiDynArrayHeader;
+} jigDynArrayHeader;
 
-#ifndef QUOSIDS_INIT_LEN
-#define QUOSIDS_INIT_LEN 8
+#ifndef JIGDS_INIT_LEN
+#define JIGDS_INIT_LEN 8
 #endif
 
-#ifndef QUOSIDS_ALLOCATOR
-#define QUOSIDS_ALLOCATOR (quosi_malloc_allocator())
+#ifndef JIGDS_ALLOCATOR
+#define JIGDS_ALLOCATOR (jig_malloc_allocator())
 #endif
 
 
-void* quosids_arrgrowf(void* ptr, size_t elemsize, size_t addlen, size_t min_cap, quosiAllocator alloc);
+void* jigds_arrgrowf(void* ptr, size_t elemsize, size_t addlen, size_t min_cap, jigAllocator alloc);
 
 
-#define quosids_arrgrow(a,b)        ((a) = quosids_arrgrowf((a), sizeof *(a), (b), QUOSIDS_INIT_LEN, QUOSIDS_ALLOCATOR))
+#define jigds_arrgrow(a,b)        ((a) = jigds_arrgrowf((a), sizeof *(a), (b), JIGDS_INIT_LEN, JIGDS_ALLOCATOR))
 
-#define quosids_arrmaybegrow(a,n)   ((!(a) || quosids_header(a)->len + (n) > quosids_header(a)->cap) ? (quosids_arrgrow(a,n),0) : 0)
+#define jigds_arrmaybegrow(a,n)   ((!(a) || jigds_header(a)->len + (n) > jigds_header(a)->cap) ? (jigds_arrgrow(a,n),0) : 0)
 
-#define quosids_header(arr)         ((quosiDynArrayHeader*)(arr) - 1)
-#define quosids_arraddn(arr, n)     (quosids_arrmaybegrow(arr,n), (n) ? (quosids_header(arr)->len += (n)) : (0))
-#define quosids_arraddnptr(arr, n)  (quosids_arrmaybegrow(arr,n), (n) ? (quosids_header(arr)->len += (n), &(arr)[quosids_header(arr)->len-(n)]) : (arr))
-#define quosids_arrpush(arr, val)   (quosids_arrmaybegrow(arr,1), (arr)[quosids_header(arr)->len++] = (val))
-#define quosids_arrlenu(arr)        ((arr) ? quosids_header(arr)->len : 0)
-#define quosids_arrlast(arr)        ((arr)[quosids_header(arr)->len-1])
-#define quosids_arrfree(arr)        ((void) ((arr) ? quosi_allocator_deallocate(QUOSIDS_ALLOCATOR, quosids_header(arr)) : (void)0), (arr)=NULL)
+#define jigds_header(arr)         ((jigDynArrayHeader*)(arr) - 1)
+#define jigds_arraddn(arr, n)     (jigds_arrmaybegrow(arr,n), (n) ? (jigds_header(arr)->len += (n)) : (0))
+#define jigds_arraddnptr(arr, n)  (jigds_arrmaybegrow(arr,n), (n) ? (jigds_header(arr)->len += (n), &(arr)[jigds_header(arr)->len-(n)]) : (arr))
+#define jigds_arrpush(arr, val)   (jigds_arrmaybegrow(arr,1), (arr)[jigds_header(arr)->len++] = (val))
+#define jigds_arrlenu(arr)        ((arr) ? jigds_header(arr)->len : 0)
+#define jigds_arrlast(arr)        ((arr)[jigds_header(arr)->len-1])
+#define jigds_arrfree(arr)        ((void) ((arr) ? jig_allocator_deallocate(JIGDS_ALLOCATOR, jigds_header(arr)) : (void)0), (arr)=NULL)
 
 #endif

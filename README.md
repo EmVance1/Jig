@@ -1,6 +1,6 @@
-# Quosi
+# Jig
 
-Quosi is a library designed to make adding complex branching dialogue to your C/C++ completely trivial. It combines the familiarity of common programming language constructs with syntax designed to read like a screenplay, aswell as flexible game state integration. Branching conversations, situational response options, and game state modification are first class citizens. Note - this is library is for managing dialogue logic, it does not perform any UI operations. That being said, embedding the language into a custom engine is designed to be as easy as possible (see below for instructions).
+Jig is a library designed to make adding complex branching dialogue to your C/C++ completely trivial. It combines the familiarity of common programming language constructs with syntax designed to read like a screenplay, aswell as flexible game state integration. Branching conversations, situational response options, and game state modification are first class citizens. Note - this is library is for managing dialogue logic, it does not perform any UI operations. That being said, embedding the language into a custom engine is designed to be as easy as possible (see below for instructions).
 
 ## Basic Example
 ```
@@ -36,25 +36,25 @@ endmod
 ```
 
 ## Installation
-Quosi compiles and links to your project out of the box with my build system [Vango](https://github.com/EmVance1/Vango). A Makefile is also provided to build a static library, although really it is as easy as compiling everything in `src`, adding `include` as an include. For vim/nvim users, the file `qsi.vim` is provided to enable basic syntax highlighting.
+Jig compiles and links to your project out of the box with my build system [Vango](https://github.com/EmVance1/Vango). A Makefile is also provided to build a static library, although really it is as easy as compiling everything in `src`, adding `include` as an include. For vim/nvim users, the file `qsi.vim` is provided to enable basic syntax highlighting.
 
 ## Project Integration
-Integrating the library into your project is equally easy. The core API consists of just 3 functions - compile, load, execute. The compiled binary format can be saved and loaded completely as is, meaning all compilation can be done ahead of time to negate load times. Below is already a complete example of what your usual skeleton may look like (see `test/test.c` for a complete CLI example). Quosi works by emitting events - upcalls - from the `exec` function. These generally occur whenever player input is expected, such as choosing dialogue options (see docs for detailed communication with the vm), but user defined events may also occur.
+Integrating the library into your project is equally easy. The core API consists of just 3 functions - compile, load, execute. The compiled binary format can be saved and loaded completely as is, meaning all compilation can be done ahead of time to negate load times. Below is already a complete example of what your usual skeleton may look like (see `test/test.c` for a complete CLI example). Jig works by emitting events - upcalls - from the `exec` function. These generally occur whenever player input is expected, such as choosing dialogue options (see docs for detailed communication with the vm), but user defined events may also occur.
 ```c
 char* src = read_to_string("examples/NPCs.qsi");
-quosiError errors = { 0 };
-quosiFile* file = quosi_file_compile_from_src(src, &errors, varkey_ctx, quosi_malloc_allocator());
+jigError errors = { 0 };
+jigFile* file = jig_file_compile_from_src(src, &errors, varkey_ctx, jig_malloc_allocator());
 free(src);
 
-quosiVm vm;
-quosi_vm_init(&vm, file, "Brian");
+jigVm vm;
+jig_vm_init(&vm, file, "Brian");
 
 while (true) {
-    switch (quosi_vm_exec(&vm, varval_ctx)) {
-    case QUOSI_UPCALL_LINE:  /* ... */ break;
-    case QUOSI_UPCALL_PICK:  /* ... */ break;
-    case QUOSI_UPCALL_EVENT: /* ... */ break;
-    case QUOSI_UPCALL_EXIT:  /* ... */ break;
+    switch (jig_vm_exec(&vm, varval_ctx)) {
+    case JIG_UPCALL_LINE:  /* ... */ break;
+    case JIG_UPCALL_PICK:  /* ... */ break;
+    case JIG_UPCALL_EVENT: /* ... */ break;
+    case JIG_UPCALL_EXIT:  /* ... */ break;
     }
 }
 

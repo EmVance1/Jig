@@ -5,6 +5,6 @@ bin/
 build/
 todo.md
 grammar.ebnf
-examples/alt.qsi
-examples/alt2.qsi
+examples/alt.jig
+examples/alt2.jig
 

@@ -1,5 +1,5 @@
 [package]
-name = "quosi"
+name = "jig"
 version = "0.1.0"
 lang = "C99"
 kind = "staticlib"

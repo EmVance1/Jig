@@ -1,11 +1,11 @@
-#ifndef CQUOSI_CPPINC_H
-#define CQUOSI_CPPINC_H
+#ifndef CJIG_CPPINC_H
+#define CJIG_CPPINC_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "quosi.h"
+#include "jig.h"
 #include "ast.h"
 #include "vm.h"
 #include "bc.h"

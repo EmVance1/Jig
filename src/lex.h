@@ -1,74 +1,74 @@
-#ifndef CQUOSI_IMPL_LEX_H
-#define CQUOSI_IMPL_LEX_H
-#include "quosi/quosi.h"
+#ifndef CJIG_IMPL_LEX_H
+#define CJIG_IMPL_LEX_H
+#include "jig/jig.h"
 #include <stdbool.h>
 #include <stdint.h>
 
 
-typedef struct quosiToken {
-    enum quosiTokenType {
-        QUOSI_TOKEN_MYFAULT = -2,
-        QUOSI_TOKEN_ERROR = -1,
-        QUOSI_TOKEN_NONE = 0,
+typedef struct jigToken {
+    enum jigTokenType {
+        JIG_TOKEN_MYFAULT = -2,
+        JIG_TOKEN_ERROR = -1,
+        JIG_TOKEN_NONE = 0,
 
-        QUOSI_TOKEN_OPENPAREN,
-        QUOSI_TOKEN_CLOSEPAREN,
-        QUOSI_TOKEN_OPENBRACK,
-        QUOSI_TOKEN_CLOSEBRACK,
-        QUOSI_TOKEN_OPENBRACE,
-        QUOSI_TOKEN_CLOSEBRACE,
+        JIG_TOKEN_OPENPAREN,
+        JIG_TOKEN_CLOSEPAREN,
+        JIG_TOKEN_OPENBRACK,
+        JIG_TOKEN_CLOSEBRACK,
+        JIG_TOKEN_OPENBRACE,
+        JIG_TOKEN_CLOSEBRACE,
 
-        QUOSI_TOKEN_ADD,
-        QUOSI_TOKEN_SUB,
-        QUOSI_TOKEN_MUL,
-        QUOSI_TOKEN_DIV,
+        JIG_TOKEN_ADD,
+        JIG_TOKEN_SUB,
+        JIG_TOKEN_MUL,
+        JIG_TOKEN_DIV,
 
-        QUOSI_TOKEN_EQU,
-        QUOSI_TOKEN_NEQ,
-        QUOSI_TOKEN_LTH,
-        QUOSI_TOKEN_GTH,
-        QUOSI_TOKEN_LEQ,
-        QUOSI_TOKEN_GEQ,
+        JIG_TOKEN_EQU,
+        JIG_TOKEN_NEQ,
+        JIG_TOKEN_LTH,
+        JIG_TOKEN_GTH,
+        JIG_TOKEN_LEQ,
+        JIG_TOKEN_GEQ,
 
-        QUOSI_TOKEN_LOGNOT,
-        QUOSI_TOKEN_LOGAND,
-        QUOSI_TOKEN_LOGOR,
+        JIG_TOKEN_LOGNOT,
+        JIG_TOKEN_LOGAND,
+        JIG_TOKEN_LOGOR,
 
-        QUOSI_TOKEN_ADDEQ,
-        QUOSI_TOKEN_SUBEQ,
-        QUOSI_TOKEN_MULEQ,
-        QUOSI_TOKEN_DIVEQ,
-        QUOSI_TOKEN_SETEQ,
+        JIG_TOKEN_ADDEQ,
+        JIG_TOKEN_SUBEQ,
+        JIG_TOKEN_MULEQ,
+        JIG_TOKEN_DIVEQ,
+        JIG_TOKEN_SETEQ,
 
-        QUOSI_TOKEN_ARROW,
-        QUOSI_TOKEN_COMMA,
-        QUOSI_TOKEN_COLON,
-        QUOSI_TOKEN_JOIN,
-        QUOSI_TOKEN_CATCHALL,
+        JIG_TOKEN_ARROW,
+        JIG_TOKEN_COMMA,
+        JIG_TOKEN_COLON,
+        JIG_TOKEN_JOIN,
+        JIG_TOKEN_CATCHALL,
 
-        QUOSI_TOKEN_IDENT,
-        QUOSI_TOKEN_NUMBER,
-        QUOSI_TOKEN_STRLIT,
-        QUOSI_TOKEN_KEYWORD,
+        JIG_TOKEN_IDENT,
+        JIG_TOKEN_NUMBER,
+        JIG_TOKEN_STRLIT,
+        JIG_TOKEN_KEYWORD,
 
-        QUOSI_TOKEN_EOF,
+        JIG_TOKEN_EOF,
     } type;
-    quosiStrView value;
-    quosiErrorSpan span;
-} quosiToken;
+    jigStrView value;
+    jigErrorSpan span;
+} jigToken;
 
-typedef struct quosiTokenStream {
+typedef struct jigTokenStream {
     const char* base;
     const char* ptr;
-    quosiErrorSpan pos;
+    jigErrorSpan pos;
     bool wasnull;
     int state;
-    quosiToken cache;
-} quosiTokenStream;
+    jigToken cache;
+} jigTokenStream;
 
-quosiTokenStream quosi_token_stream_init(const char* text);
-quosiToken quosi_token_stream_peek(const quosiTokenStream* self);
-quosiToken quosi_token_stream_next(quosiTokenStream* self);
+jigTokenStream jig_token_stream_init(const char* text);
+jigToken jig_token_stream_peek(const jigTokenStream* self);
+jigToken jig_token_stream_next(jigTokenStream* self);
 
 
 #endif

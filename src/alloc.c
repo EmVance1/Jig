@@ -6,7 +6,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #endif
-#include "quosi/quosi.h"
+#include "jig/jig.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,24 +28,24 @@ static size_t system_page_size(void) {
 
 #define ROUND(x, n) ( ((x)+(n)-1) / (n) * (n) )
 
-static void _arena_grow(quosiMemoryArena* self, size_t minsize);
+static void _arena_grow(jigMemoryArena* self, size_t minsize);
 
-quosiMemoryArena quosi_memory_arena_create(int source, size_t init) {
+jigMemoryArena jig_memory_arena_create(int source, size_t init) {
     const size_t blocksize = init == 0 ? 10 * system_page_size() : ROUND(init, system_page_size());
-    quosiMemoryArenaConfig cfg = {
+    jigMemoryArenaConfig cfg = {
         .initial=blocksize,
         .max_reserve=1000*1000*1000,
         .source=source,
         .lazyinit=init==0,
-        .growth_policy=QUOSI_MEMORY_ARENA_GEOMETRIC,
+        .growth_policy=JIG_MEMORY_ARENA_GEOMETRIC,
     };
-    return quosi_memory_arena_createex(cfg);
+    return jig_memory_arena_createex(cfg);
 }
 
-quosiMemoryArena quosi_memory_arena_createex(quosiMemoryArenaConfig cfg) {
+jigMemoryArena jig_memory_arena_createex(jigMemoryArenaConfig cfg) {
     const size_t blocksize = ROUND(cfg.initial, system_page_size());
 
-    quosiMemoryArena result = {
+    jigMemoryArena result = {
         .base_ptr=NULL,
         .curr_ptr=NULL,
         .last_ptr=NULL,
@@ -55,13 +55,13 @@ quosiMemoryArena quosi_memory_arena_createex(quosiMemoryArenaConfig cfg) {
         .source=cfg.source,
     };
 
-    if (cfg.source == QUOSI_MEMORY_ARENA_PAGE) {
+    if (cfg.source == JIG_MEMORY_ARENA_PAGE) {
 #ifdef _WIN32
         result.base_ptr = VirtualAlloc(NULL, cfg.max_reserve, MEM_RESERVE, PAGE_READWRITE);
-        if (!result.base_ptr) return (quosiMemoryArena){ 0 };
+        if (!result.base_ptr) return (jigMemoryArena){ 0 };
 #else
         result.base_ptr = mmap(NULL, cfg.max_reserve, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        if (result.base_ptr == MAP_FAILED) return (quosiMemoryArena){ 0 };
+        if (result.base_ptr == MAP_FAILED) return (jigMemoryArena){ 0 };
 #endif
     }
 
@@ -70,9 +70,9 @@ quosiMemoryArena quosi_memory_arena_createex(quosiMemoryArenaConfig cfg) {
     return result;
 }
 
-void quosi_memory_arena_destroy(quosiMemoryArena* self) {
+void jig_memory_arena_destroy(jigMemoryArena* self) {
     if (!self->base_ptr) return;
-    if (self->source == QUOSI_MEMORY_ARENA_PAGE) {
+    if (self->source == JIG_MEMORY_ARENA_PAGE) {
 #ifdef _WIN32
         VirtualFree(self->base_ptr, 0, MEM_RELEASE);
 #else
@@ -89,8 +89,8 @@ void quosi_memory_arena_destroy(quosiMemoryArena* self) {
     self->commit = 0;
 }
 
-void quosi_memory_arena_reset(quosiMemoryArena* self) {
-    if (self->source == QUOSI_MEMORY_ARENA_PAGE && self->commit > self->blocksize) {
+void jig_memory_arena_reset(jigMemoryArena* self) {
+    if (self->source == JIG_MEMORY_ARENA_PAGE && self->commit > self->blocksize) {
         const size_t rem = self->commit - self->blocksize;
 
 #ifdef _WIN32
@@ -107,14 +107,14 @@ void quosi_memory_arena_reset(quosiMemoryArena* self) {
 }
 
 
-static void _arena_grow(quosiMemoryArena* self, size_t minsize) {
-    size_t newsize = self->commit + ((self->commit == 0 || self->policy == QUOSI_MEMORY_ARENA_LINEAR) ? self->blocksize : self->commit);
+static void _arena_grow(jigMemoryArena* self, size_t minsize) {
+    size_t newsize = self->commit + ((self->commit == 0 || self->policy == JIG_MEMORY_ARENA_LINEAR) ? self->blocksize : self->commit);
     if (minsize > newsize) {
         newsize = ROUND(minsize, system_page_size());
     }
     const size_t growth = newsize - self->commit;
 
-    if (self->source == QUOSI_MEMORY_ARENA_PAGE) {
+    if (self->source == JIG_MEMORY_ARENA_PAGE) {
 #ifdef _WIN32
         if (!VirtualAlloc(self->base_ptr + self->commit, growth, MEM_COMMIT, PAGE_READWRITE)) abort();
 #else
@@ -132,7 +132,7 @@ static void _arena_grow(quosiMemoryArena* self, size_t minsize) {
 
 static void* _arena_allocate(void* _self, size_t nbytes) {
     if (nbytes == 0) return NULL;
-    quosiMemoryArena* self = (quosiMemoryArena*)_self;
+    jigMemoryArena* self = (jigMemoryArena*)_self;
     const size_t block = ROUND(nbytes, 16);
     const size_t used = (size_t)(self->curr_ptr - self->base_ptr);
     if (used + block > self->commit) {
@@ -145,7 +145,7 @@ static void* _arena_allocate(void* _self, size_t nbytes) {
 }
 static void _arena_deallocate(void* _self, void* ptr) {
     if (ptr == NULL) return;
-    quosiMemoryArena* self = (quosiMemoryArena*)_self;
+    jigMemoryArena* self = (jigMemoryArena*)_self;
     if (ptr == self->last_ptr) {
         self->curr_ptr = self->last_ptr;
         self->last_ptr = NULL;
@@ -154,7 +154,7 @@ static void _arena_deallocate(void* _self, void* ptr) {
 static void* _arena_reallocate(void* _self, void* oldptr, size_t oldlen, size_t newlen) {
     if (newlen == 0) return NULL;
     if (oldptr == NULL) return NULL;
-    quosiMemoryArena* self = (quosiMemoryArena*)_self;
+    jigMemoryArena* self = (jigMemoryArena*)_self;
     void* newptr;
     if (oldptr == self->last_ptr) {
         self->curr_ptr = self->last_ptr;
@@ -173,8 +173,8 @@ static void* _arena_reallocate(void* _self, void* oldptr, size_t oldlen, size_t 
     return newptr;
 }
 
-quosiAllocator quosi_memory_arena_allocator(quosiMemoryArena* arena) {
-    return (quosiAllocator){
+jigAllocator jig_memory_arena_allocator(jigMemoryArena* arena) {
+    return (jigAllocator){
         .impl=arena,
         .allocate  =_arena_allocate,
         .deallocate=_arena_deallocate,
@@ -197,8 +197,8 @@ static void* _malloc_reallocate(void* _self, void* oldptr, size_t oldbytes, size
     return realloc(oldptr, newbytes);
 }
 
-quosiAllocator quosi_malloc_allocator(void) {
-    return (quosiAllocator){
+jigAllocator jig_malloc_allocator(void) {
+    return (jigAllocator){
         .impl=NULL,
         .allocate  =_malloc_allocate,
         .deallocate=_malloc_deallocate,
@@ -207,13 +207,13 @@ quosiAllocator quosi_malloc_allocator(void) {
 }
 
 
-void* quosi_allocator_allocate(quosiAllocator self, size_t nbytes) {
+void* jig_allocator_allocate(jigAllocator self, size_t nbytes) {
     return self.allocate(self.impl, nbytes);
 }
-void quosi_allocator_deallocate(quosiAllocator self, void* ptr) {
+void jig_allocator_deallocate(jigAllocator self, void* ptr) {
     self.deallocate(self.impl, ptr);
 }
-void* quosi_allocator_reallocate(quosiAllocator self, void* oldptr, size_t oldbytes, size_t newbytes) {
+void* jig_allocator_reallocate(jigAllocator self, void* oldptr, size_t oldbytes, size_t newbytes) {
     return self.reallocate(self.impl, oldptr, oldbytes, newbytes);
 }
 

@@ -1,5 +1,5 @@
-#include "quosi/quosi.h"
-#include "quosi/bc.h"
+#include "jig/jig.h"
+#include "jig/bc.h"
 #include <string.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -25,12 +25,12 @@ static uint32_t jumps_get(const uint32_t* jumps, size_t njs, uint32_t target) {
     return 0;
 }
 
-void quosi_file_prettyprint(const quosiFile* bin, const char* module, void* _file) {
-    const quosiFileModTableEntry mod = quosi_file_module(bin, module);
+void jig_file_prettyprint(const jigFile* bin, const char* module, void* _file) {
+    const jigFileModTableEntry mod = jig_file_module(bin, module);
     const uint8_t* code    = mod.code;
     const size_t code_len  = mod.len;
     const size_t entry_pos = mod.entry;
-    const uint8_t* strs = quosi_file_strs(bin);
+    const uint8_t* strs = jig_file_strs(bin);
     FILE* f = (FILE*)_file;
 
     uint32_t PC = 0;
@@ -44,22 +44,22 @@ void quosi_file_prettyprint(const quosiFile* bin, const char* module, void* _fil
 
     while (PC < code_len) {
         switch (code[PC++]) {
-        case QUOSI_INSTR_JUMP:
+        case JIG_INSTR_JUMP:
             memcpy(&a2, code + PC, sizeof(uint32_t));
             if (!jumps_contains(jumps, njs, a2)) jumps[njs++] = a2;
             PC += sizeof(uint32_t);
             break;
-        case QUOSI_INSTR_JZ:
+        case JIG_INSTR_JZ:
             memcpy(&a2, code + PC, sizeof(uint32_t));
             if (!jumps_contains(jumps, njs, a2)) jumps[njs++] = a2;
             PC += sizeof(uint32_t);
             break;
-        case QUOSI_INSTR_JNZ:
+        case JIG_INSTR_JNZ:
             memcpy(&a2, code + PC, sizeof(uint32_t));
             if (!jumps_contains(jumps, njs, a2)) jumps[njs++] = a2;
             PC += sizeof(uint32_t);
             break;
-        case QUOSI_INSTR_SWITCH:
+        case JIG_INSTR_SWITCH:
             for (uint32_t i = 0; i < skip; i++) {
                 memcpy(&a2, code + PC, sizeof(uint32_t));
                 if (!jumps_contains(jumps, njs, a2)) jumps[njs++] = a2;
@@ -67,7 +67,7 @@ void quosi_file_prettyprint(const quosiFile* bin, const char* module, void* _fil
             }
             skip = 0;
             break;
-        case QUOSI_INSTR_PROP:
+        case JIG_INSTR_PROP:
             PC += sizeof(uint32_t) + sizeof(uint8_t);
             skip++;
             break;
@@ -84,100 +84,100 @@ void quosi_file_prettyprint(const quosiFile* bin, const char* module, void* _fil
             fprintf(f, "    <START>:\n");
         }
         switch (code[PC++]) {
-        case QUOSI_INSTR_EOF:
+        case JIG_INSTR_EOF:
             return;
 
-        case QUOSI_INSTR_PUSH:
+        case JIG_INSTR_PUSH:
             memcpy(&a3, code + PC, sizeof(uint64_t));
             fprintf(f, "0x%04X    PUSH $%" PRIu64 "\n", PC-1, a3);
             PC += sizeof(uint64_t);
             break;
-        case QUOSI_INSTR_POP:
+        case JIG_INSTR_POP:
             fprintf(f, "0x%04X    POP\n", PC-1);
             break;
-        case QUOSI_INSTR_DUP:
+        case JIG_INSTR_DUP:
             fprintf(f, "0x%04X    DUP\n", PC-1);
             break;
 
-        case QUOSI_INSTR_LOAD:
+        case JIG_INSTR_LOAD:
             memcpy(&a2, code + PC, sizeof(uint32_t));
             fprintf(f, "0x%04X    LOAD @%u\n", PC-1, a2);
             PC += sizeof(uint32_t);
             break;
-        case QUOSI_INSTR_STORE:
+        case JIG_INSTR_STORE:
             memcpy(&a2, code + PC, sizeof(uint32_t));
             fprintf(f, "0x%04X    STORE @%u\n", PC-1, a2);
             PC += sizeof(uint32_t);
             break;
 
-        case QUOSI_INSTR_LAND:
+        case JIG_INSTR_LAND:
             fprintf(f, "0x%04X    LAND\n", PC-1);
             break;
-        case QUOSI_INSTR_LOR:
+        case JIG_INSTR_LOR:
             fprintf(f, "0x%04X    LOR\n", PC-1);
             break;
-        case QUOSI_INSTR_LNOT:
+        case JIG_INSTR_LNOT:
             fprintf(f, "0x%04X    LNOT\n", PC-1);
             break;
-        case QUOSI_INSTR_ADD:
+        case JIG_INSTR_ADD:
             fprintf(f, "0x%04X    ADD\n", PC-1);
             break;
-        case QUOSI_INSTR_SUB:
+        case JIG_INSTR_SUB:
             fprintf(f, "0x%04X    SUB\n", PC-1);
             break;
-        case QUOSI_INSTR_MUL:
+        case JIG_INSTR_MUL:
             fprintf(f, "0x%04X    MUL\n", PC-1);
             break;
-        case QUOSI_INSTR_DIV:
+        case JIG_INSTR_DIV:
             fprintf(f, "0x%04X    DIV\n", PC-1);
             break;
-        case QUOSI_INSTR_NEG:
+        case JIG_INSTR_NEG:
             fprintf(f, "0x%04X    NEG\n", PC-1);
             break;
-        case QUOSI_INSTR_EQU:
+        case JIG_INSTR_EQU:
             fprintf(f, "0x%04X    EQU\n", PC-1);
             break;
-        case QUOSI_INSTR_NEQ:
+        case JIG_INSTR_NEQ:
             fprintf(f, "0x%04X    NEQ\n", PC-1);
             break;
-        case QUOSI_INSTR_IEQV:
+        case JIG_INSTR_IEQV:
             memcpy(&a3, code + PC, sizeof(uint64_t));
             fprintf(f, "0x%04X    IEQ  $%" PRIu64 "\n", PC-1, a3);
             PC += sizeof(uint64_t);
             break;
-        case QUOSI_INSTR_IEQK:
+        case JIG_INSTR_IEQK:
             memcpy(&a2, code + PC, sizeof(uint32_t));
             fprintf(f, "0x%04X    IEQ  %u\n", PC-1, a2);
             PC += sizeof(uint32_t);
             break;
-        case QUOSI_INSTR_LEQ:
+        case JIG_INSTR_LEQ:
             fprintf(f, "0x%04X    LEQ\n", PC-1);
             break;
-        case QUOSI_INSTR_LTH:
+        case JIG_INSTR_LTH:
             fprintf(f, "0x%04X    LTH\n", PC-1);
             break;
-        case QUOSI_INSTR_GEQ:
+        case JIG_INSTR_GEQ:
             fprintf(f, "0x%04X    GEQ\n", PC-1);
             break;
-        case QUOSI_INSTR_GTH:
+        case JIG_INSTR_GTH:
             fprintf(f, "0x%04X    GTH\n", PC-1);
             break;
-        case QUOSI_INSTR_JUMP:
+        case JIG_INSTR_JUMP:
             memcpy(&a2, code + PC, sizeof(uint32_t));
             fprintf(f, "0x%04X    JUMP .L%u\n", PC-1, jumps_get(jumps, njs, a2));
             PC += sizeof(uint32_t);
             break;
-        case QUOSI_INSTR_JZ:
+        case JIG_INSTR_JZ:
             memcpy(&a2, code + PC, sizeof(uint32_t));
             fprintf(f, "0x%04X    JZ   .L%u\n", PC-1, jumps_get(jumps, njs, a2));
             PC += sizeof(uint32_t);
             break;
-        case QUOSI_INSTR_JNZ:
+        case JIG_INSTR_JNZ:
             memcpy(&a2, code + PC, sizeof(uint32_t));
             fprintf(f, "0x%04X    JNZ  .L%u\n", PC-1, jumps_get(jumps, njs, a2));
             PC += sizeof(uint32_t);
             break;
-        case QUOSI_INSTR_SWITCH:
+        case JIG_INSTR_SWITCH:
             fprintf(f, "0x%04X    SWITCH [ ", PC-1);
             for (uint32_t i = 0; i < skip; i++) {
                 memcpy(&a2, code + PC, sizeof(uint32_t));
@@ -189,7 +189,7 @@ void quosi_file_prettyprint(const quosiFile* bin, const char* module, void* _fil
             skip = 0;
             break;
 
-        case QUOSI_INSTR_PROP:
+        case JIG_INSTR_PROP:
             fprintf(f, "0x%04X    ", PC-1);
             memcpy(&a2, code + PC, sizeof(uint32_t));
             PC += sizeof(uint32_t);
@@ -198,7 +198,7 @@ void quosi_file_prettyprint(const quosiFile* bin, const char* module, void* _fil
             fprintf(f, "PROP \"%s\", %d\n", (const char*)strs + a2, (int)a1);
             skip++;
             break;
-        case QUOSI_INSTR_LINE:
+        case JIG_INSTR_LINE:
             fprintf(f, "0x%04X    ", PC-1);
             memcpy(&a2, code + PC, sizeof(uint32_t));
             PC += sizeof(uint32_t);
@@ -207,10 +207,10 @@ void quosi_file_prettyprint(const quosiFile* bin, const char* module, void* _fil
             PC += sizeof(uint32_t);
             fprintf(f, "%s\"\n", (const char*)(strs + a2));
             break;
-        case QUOSI_INSTR_PICK:
+        case JIG_INSTR_PICK:
             fprintf(f, "0x%04X    PICK\n", PC-1);
             break;
-        case QUOSI_INSTR_EVENT:
+        case JIG_INSTR_EVENT:
             memcpy(&a2, code + PC, sizeof(uint32_t));
             fprintf(f, "0x%04X    EVENT \"%s\"\n", PC-1, (const char*)strs + a2);
             PC += sizeof(uint32_t);

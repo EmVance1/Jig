@@ -1,16 +1,15 @@
-#ifndef CQUOSI_IMPL_PARSECTX_H
-#define CQUOSI_IMPL_PARSECTX_H
-#include "quosi/ast.h"
+#ifndef CJIG_IMPL_PARSECTX_H
+#define CJIG_IMPL_PARSECTX_H
 #include "lex.h"
 
 
-typedef struct quosiParseCtx {
-    quosiAllocator alloc;
-    quosiTokenStream tokens;
-    quosiError* errors;
+typedef struct jigParseCtx {
+    jigAllocator alloc;
+    jigTokenStream tokens;
+    jigError* errors;
     // vector
-    quosiToken* edges;
-} quosiParseCtx;
+    jigToken* edges;
+} jigParseCtx;
 
 
 #endif

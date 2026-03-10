@@ -5,7 +5,7 @@ ARFLAGS = rcs
 
 SRC_DIR = src
 OBJ_DIR = build
-LIB     = libquosi.a
+LIB     = libjig.a
 
 SRCS = $(wildcard $(SRC_DIR)/*.c)
 OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))

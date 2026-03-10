@@ -15,7 +15,7 @@ static bool is_space(char c, bool* wasnull) {
     if (c == '\0') *wasnull = true;
     return c == ' ' || c == '\n' || c == '\r' || c == '\t' || c == '\0';
 }
-static bool is_keyword(quosiStrView str) {
+static bool is_keyword(jigStrView str) {
 #define STREQ(view, cptr) ((view.len == sizeof(cptr)-1) && (strncmp(view.ptr, cptr, view.len) == 0))
     if (STREQ(str, "if"))     return true;
     if (STREQ(str, "then"))   return true;
@@ -43,10 +43,10 @@ enum {
     LSTATE_COMMENT,
 };
 
-static quosiToken _impl_step(quosiTokenStream* self);
+static jigToken _impl_step(jigTokenStream* self);
 
-quosiTokenStream quosi_token_stream_init(const char* text) {
-    quosiTokenStream result = {
+jigTokenStream jig_token_stream_init(const char* text) {
+    jigTokenStream result = {
         .base=text,
         .ptr=text,
         .pos={ 1, 0 },
@@ -58,24 +58,24 @@ quosiTokenStream quosi_token_stream_init(const char* text) {
     return result;
 }
 
-quosiToken quosi_token_stream_peek(const quosiTokenStream* self) {
+jigToken jig_token_stream_peek(const jigTokenStream* self) {
     return self->cache;
 }
 
-quosiToken quosi_token_stream_next(quosiTokenStream* self) {
-    const quosiToken temp = self->cache;
+jigToken jig_token_stream_next(jigTokenStream* self) {
+    const jigToken temp = self->cache;
     self->cache = _impl_step(self);
     return temp;
 }
 
 
-static quosiToken _impl_step(quosiTokenStream* self) {
+static jigToken _impl_step(jigTokenStream* self) {
     const char* tbeg = NULL;
     size_t tlen = 0;
-    quosiErrorSpan tspan = self->pos;
+    jigErrorSpan tspan = self->pos;
 
     while (!self->wasnull) {
-        quosiErrorSpan p = self->pos;
+        jigErrorSpan p = self->pos;
         const char c = *(self->ptr++);
         if (c == '\n') { p.row++; p.col = 0; } else { p.col++; }
 
@@ -99,13 +99,13 @@ static quosiToken _impl_step(quosiTokenStream* self) {
                 tspan = p;
                 self->pos = p;
                 switch (c) {
-                case '(': return (quosiToken){ .type=QUOSI_TOKEN_OPENPAREN,  .value={ tbeg, 1 }, .span=tspan };
-                case ')': return (quosiToken){ .type=QUOSI_TOKEN_CLOSEPAREN, .value={ tbeg, 1 }, .span=tspan };
-                case '[': return (quosiToken){ .type=QUOSI_TOKEN_OPENBRACK,  .value={ tbeg, 1 }, .span=tspan };
-                case ']': return (quosiToken){ .type=QUOSI_TOKEN_CLOSEBRACK, .value={ tbeg, 1 }, .span=tspan };
-                case '{': return (quosiToken){ .type=QUOSI_TOKEN_OPENBRACE,  .value={ tbeg, 1 }, .span=tspan };
-                case '}': return (quosiToken){ .type=QUOSI_TOKEN_CLOSEBRACE, .value={ tbeg, 1 }, .span=tspan };
-                case ',': return (quosiToken){ .type=QUOSI_TOKEN_COMMA,      .value={ tbeg, 1 }, .span=tspan };
+                case '(': return (jigToken){ .type=JIG_TOKEN_OPENPAREN,  .value={ tbeg, 1 }, .span=tspan };
+                case ')': return (jigToken){ .type=JIG_TOKEN_CLOSEPAREN, .value={ tbeg, 1 }, .span=tspan };
+                case '[': return (jigToken){ .type=JIG_TOKEN_OPENBRACK,  .value={ tbeg, 1 }, .span=tspan };
+                case ']': return (jigToken){ .type=JIG_TOKEN_CLOSEBRACK, .value={ tbeg, 1 }, .span=tspan };
+                case '{': return (jigToken){ .type=JIG_TOKEN_OPENBRACE,  .value={ tbeg, 1 }, .span=tspan };
+                case '}': return (jigToken){ .type=JIG_TOKEN_CLOSEBRACE, .value={ tbeg, 1 }, .span=tspan };
+                case ',': return (jigToken){ .type=JIG_TOKEN_COMMA,      .value={ tbeg, 1 }, .span=tspan };
                 case '+': case '-': case '*': case '/': case '<': case '>': case '=': case '!': case '&': case '|': case ':':
                     self->state = LSTATE_SYMBOL; break;
                 case '"':
@@ -113,7 +113,7 @@ static quosiToken _impl_step(quosiTokenStream* self) {
                 case '#':
                     self->state = LSTATE_COMMENT; break;
                 default:
-                    return (quosiToken){ .type=QUOSI_TOKEN_ERROR, .value={ "unknown symbol encountered", 0 }, .span=tspan };
+                    return (jigToken){ .type=JIG_TOKEN_ERROR, .value={ "unknown symbol encountered", 0 }, .span=tspan };
                 }
             }
             break;
@@ -128,13 +128,13 @@ static quosiToken _impl_step(quosiTokenStream* self) {
                     self->ptr--;
                 }
                 self->state = LSTATE_VOID;
-                const quosiStrView view = { tbeg, tlen };
+                const jigStrView view = { tbeg, tlen };
                 if (view.len == 1 && strncmp("_", view.ptr, 1) == 0) {
-                    return (quosiToken){ .type=QUOSI_TOKEN_CATCHALL, .value=view, .span=tspan };
+                    return (jigToken){ .type=JIG_TOKEN_CATCHALL, .value=view, .span=tspan };
                 } else if (is_keyword(view)) {
-                    return (quosiToken){ .type=QUOSI_TOKEN_KEYWORD,  .value=view, .span=tspan };
+                    return (jigToken){ .type=JIG_TOKEN_KEYWORD,  .value=view, .span=tspan };
                 } else {
-                    return (quosiToken){ .type=QUOSI_TOKEN_IDENT,    .value=view, .span=tspan };
+                    return (jigToken){ .type=JIG_TOKEN_IDENT,    .value=view, .span=tspan };
                 }
             }
             break;
@@ -145,11 +145,11 @@ static quosiToken _impl_step(quosiTokenStream* self) {
             } else if (is_space(c, &self->wasnull)) {
                 self->pos = p;
                 self->state = LSTATE_VOID;
-                return (quosiToken){ .type=QUOSI_TOKEN_NUMBER, .value={ tbeg, tlen }, .span=tspan };
+                return (jigToken){ .type=JIG_TOKEN_NUMBER, .value={ tbeg, tlen }, .span=tspan };
             } else {
                 self->ptr--;
                 self->state = LSTATE_VOID;
-                return (quosiToken){ .type=QUOSI_TOKEN_NUMBER, .value={ tbeg, tlen }, .span=tspan };
+                return (jigToken){ .type=JIG_TOKEN_NUMBER, .value={ tbeg, tlen }, .span=tspan };
             }
             break;
 
@@ -158,7 +158,7 @@ static quosiToken _impl_step(quosiTokenStream* self) {
             if (c == '"') {
                 self->pos = p;
                 self->state = LSTATE_VOID;
-                return (quosiToken){ .type=QUOSI_TOKEN_STRLIT, .value={ tbeg+1, tlen-2 }, .span=tspan };
+                return (jigToken){ .type=JIG_TOKEN_STRLIT, .value={ tbeg+1, tlen-2 }, .span=tspan };
             } else if (c == '\\') {
                 self->state = LSTATE_STRINGESC;
             }
@@ -174,45 +174,45 @@ static quosiToken _impl_step(quosiTokenStream* self) {
             if (c == '=') {
                 self->pos = p;
                 switch (*tbeg) {
-                case '+': return (quosiToken){ .type=QUOSI_TOKEN_ADDEQ, .value={ tbeg, 2 }, .span=tspan };
-                case '-': return (quosiToken){ .type=QUOSI_TOKEN_SUBEQ, .value={ tbeg, 2 }, .span=tspan };
-                case '*': return (quosiToken){ .type=QUOSI_TOKEN_MULEQ, .value={ tbeg, 2 }, .span=tspan };
-                case '/': return (quosiToken){ .type=QUOSI_TOKEN_DIVEQ, .value={ tbeg, 2 }, .span=tspan };
-                case '<': return (quosiToken){ .type=QUOSI_TOKEN_LEQ,   .value={ tbeg, 2 }, .span=tspan };
-                case '>': return (quosiToken){ .type=QUOSI_TOKEN_GEQ,   .value={ tbeg, 2 }, .span=tspan };
-                case '=': return (quosiToken){ .type=QUOSI_TOKEN_EQU,   .value={ tbeg, 2 }, .span=tspan };
-                case '!': return (quosiToken){ .type=QUOSI_TOKEN_NEQ,   .value={ tbeg, 2 }, .span=tspan };
+                case '+': return (jigToken){ .type=JIG_TOKEN_ADDEQ, .value={ tbeg, 2 }, .span=tspan };
+                case '-': return (jigToken){ .type=JIG_TOKEN_SUBEQ, .value={ tbeg, 2 }, .span=tspan };
+                case '*': return (jigToken){ .type=JIG_TOKEN_MULEQ, .value={ tbeg, 2 }, .span=tspan };
+                case '/': return (jigToken){ .type=JIG_TOKEN_DIVEQ, .value={ tbeg, 2 }, .span=tspan };
+                case '<': return (jigToken){ .type=JIG_TOKEN_LEQ,   .value={ tbeg, 2 }, .span=tspan };
+                case '>': return (jigToken){ .type=JIG_TOKEN_GEQ,   .value={ tbeg, 2 }, .span=tspan };
+                case '=': return (jigToken){ .type=JIG_TOKEN_EQU,   .value={ tbeg, 2 }, .span=tspan };
+                case '!': return (jigToken){ .type=JIG_TOKEN_NEQ,   .value={ tbeg, 2 }, .span=tspan };
                 default:
-                    return (quosiToken){ .type=QUOSI_TOKEN_ERROR, .value={ "unknown double glyph encountered", 0 }, .span=tspan };
+                    return (jigToken){ .type=JIG_TOKEN_ERROR, .value={ "unknown double glyph encountered", 0 }, .span=tspan };
                 }
             } else if (c == '&' && *tbeg == '&') {
                 self->pos = p;
-                return (quosiToken){ .type=QUOSI_TOKEN_LOGAND, .value={ tbeg, 2 }, .span=tspan };
+                return (jigToken){ .type=JIG_TOKEN_LOGAND, .value={ tbeg, 2 }, .span=tspan };
             } else if (c == '|' && *tbeg == '|') {
                 self->pos = p;
-                return (quosiToken){ .type=QUOSI_TOKEN_LOGOR,  .value={ tbeg, 2 }, .span=tspan };
+                return (jigToken){ .type=JIG_TOKEN_LOGOR,  .value={ tbeg, 2 }, .span=tspan };
             } else if (c == ':' && *tbeg == ':') {
                 self->pos = p;
-                return (quosiToken){ .type=QUOSI_TOKEN_JOIN,   .value={ tbeg, 2 }, .span=tspan };
+                return (jigToken){ .type=JIG_TOKEN_JOIN,   .value={ tbeg, 2 }, .span=tspan };
             } else if (c == '>' && *tbeg == '=') {
                 self->pos = p;
-                return (quosiToken){ .type=QUOSI_TOKEN_ARROW,  .value={ tbeg, 2 }, .span=tspan };
+                return (jigToken){ .type=JIG_TOKEN_ARROW,  .value={ tbeg, 2 }, .span=tspan };
             } else {
                 self->ptr--;
                 switch (*tbeg) {
-                case '+': return (quosiToken){ .type=QUOSI_TOKEN_ADD,    .value={ tbeg, 1 }, .span=tspan };
-                case '-': return (quosiToken){ .type=QUOSI_TOKEN_SUB,    .value={ tbeg, 1 }, .span=tspan };
-                case '*': return (quosiToken){ .type=QUOSI_TOKEN_MUL,    .value={ tbeg, 1 }, .span=tspan };
-                case '/': return (quosiToken){ .type=QUOSI_TOKEN_DIV,    .value={ tbeg, 1 }, .span=tspan };
-                case '<': return (quosiToken){ .type=QUOSI_TOKEN_LTH,    .value={ tbeg, 1 }, .span=tspan };
-                case '>': return (quosiToken){ .type=QUOSI_TOKEN_GTH,    .value={ tbeg, 1 }, .span=tspan };
-                case '=': return (quosiToken){ .type=QUOSI_TOKEN_SETEQ,  .value={ tbeg, 1 }, .span=tspan };
-                case '!': return (quosiToken){ .type=QUOSI_TOKEN_LOGNOT, .value={ tbeg, 1 }, .span=tspan };
-                case ':': return (quosiToken){ .type=QUOSI_TOKEN_COLON,  .value={ tbeg, 1 }, .span=tspan };
+                case '+': return (jigToken){ .type=JIG_TOKEN_ADD,    .value={ tbeg, 1 }, .span=tspan };
+                case '-': return (jigToken){ .type=JIG_TOKEN_SUB,    .value={ tbeg, 1 }, .span=tspan };
+                case '*': return (jigToken){ .type=JIG_TOKEN_MUL,    .value={ tbeg, 1 }, .span=tspan };
+                case '/': return (jigToken){ .type=JIG_TOKEN_DIV,    .value={ tbeg, 1 }, .span=tspan };
+                case '<': return (jigToken){ .type=JIG_TOKEN_LTH,    .value={ tbeg, 1 }, .span=tspan };
+                case '>': return (jigToken){ .type=JIG_TOKEN_GTH,    .value={ tbeg, 1 }, .span=tspan };
+                case '=': return (jigToken){ .type=JIG_TOKEN_SETEQ,  .value={ tbeg, 1 }, .span=tspan };
+                case '!': return (jigToken){ .type=JIG_TOKEN_LOGNOT, .value={ tbeg, 1 }, .span=tspan };
+                case ':': return (jigToken){ .type=JIG_TOKEN_COLON,  .value={ tbeg, 1 }, .span=tspan };
                 case '&': case '|':
-                    return (quosiToken){ .type=QUOSI_TOKEN_ERROR,   .value={ "unknown double glyph encountered", 0 }, .span=tspan };
+                    return (jigToken){ .type=JIG_TOKEN_ERROR,   .value={ "unknown double glyph encountered", 0 }, .span=tspan };
                 default:
-                    return (quosiToken){ .type=QUOSI_TOKEN_MYFAULT, .value={ "CODING ERROR: switch should never default", 0 }, .span=tspan };
+                    return (jigToken){ .type=JIG_TOKEN_MYFAULT, .value={ "CODING ERROR: switch should never default", 0 }, .span=tspan };
                 }
             }
             break;
@@ -226,6 +226,6 @@ static quosiToken _impl_step(quosiTokenStream* self) {
         self->pos = p;
     }
 
-    return (quosiToken){ .type=QUOSI_TOKEN_EOF, .value={ "[[EOF]]", 0 }, .span=self->pos };
+    return (jigToken){ .type=JIG_TOKEN_EOF, .value={ "[[EOF]]", 0 }, .span=self->pos };
 }
 

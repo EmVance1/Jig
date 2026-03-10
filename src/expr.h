@@ -1,9 +1,9 @@
-#ifndef CQUOSI_IMPL_EXPR_H
-#define CQUOSI_IMPL_EXPR_H
-#include "quosi/ast.h"
+#ifndef CJIG_IMPL_EXPR_H
+#define CJIG_IMPL_EXPR_H
+#include "jig/ast.h"
 #include "ctx.h"
 
-void quosi_internal_parse_expr(quosiParseCtx* ctx, quosiExpr* result);
-void quosi_internal_parse_value(quosiParseCtx* ctx, quosiExpr* result);
+void jig_internal_parse_expr(jigParseCtx* ctx, jigExpr* result);
+void jig_internal_parse_value(jigParseCtx* ctx, jigExpr* result);
 
 #endif
