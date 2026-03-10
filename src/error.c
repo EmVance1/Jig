@@ -29,7 +29,10 @@ int jig_internal_error_handle(jigError* errs, jigToken tok, int type) {
 int jig_internal_error_check(jigError* errs, jigToken tok, int expect, int failtype) {
     if      (tok.type == JIG_TOKEN_ERROR) return jig_internal_error_handle(errs, tok, JIG_ERR_INVALID_TOKEN);
     else if (tok.type == JIG_TOKEN_EOF)   return jig_internal_error_handle(errs, tok, JIG_ERR_EARLY_EOF);
-    else if (tok.type != expect)            return jig_internal_error_handle(errs, tok, failtype);
+    else if (expect == JIG_TOKEN_IDENT && tok.type == JIG_TOKEN_KEYWORD) {
+        return jig_internal_error_handle(errs, tok, JIG_ERR_RESERVED_NAME);
+    }
+    else if (tok.type != expect) return jig_internal_error_handle(errs, tok, failtype);
     return 0;
 }
 
@@ -47,6 +50,8 @@ const char* jig_error_to_string(jigErrorValue e) {
         return "invalid token encountered";
     case JIG_ERR_MISPLACED_TOKEN:
         return "unexpected token encountered";
+    case JIG_ERR_RESERVED_NAME:
+        return "identifier here is reserved as a keyword";
 
     case JIG_ERR_BAD_RENAME:
         return "'rename' declaration is malformed";
@@ -103,6 +108,8 @@ bool jig_error_is_critical(jigErrorValue e) {
     case JIG_ERR_INVALID_TOKEN:
         return true;
     case JIG_ERR_MISPLACED_TOKEN:
+        return true;
+    case JIG_ERR_RESERVED_NAME:
         return true;
 
     case JIG_ERR_BAD_RENAME:

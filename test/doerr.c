@@ -29,6 +29,11 @@ vango_test(invalid_token) {
         "module Token START & <Brian: \"Hello there.\"> => EXIT endmod");
 }
 
+vango_test(reserved_name) {
+    expect_single_fail(_vango_test_result, JIG_ERR_RESERVED_NAME,
+        "module Token START = <Brian: \"Hello there.\"> => database database = <Brian: \"Byebye.\"> => EXIT endmod");
+}
+
 vango_test(invalid_atom) {
     expect_single_fail(_vango_test_result, JIG_ERR_INVALID_ATOM,
         "module Atom START = <Brian: \"Hello there.\"> :: (a += =) => EXIT endmod");

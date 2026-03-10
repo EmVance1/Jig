@@ -24,6 +24,7 @@ typedef struct jigErrorValue {
         JIG_ERR_EARLY_EOF,
         JIG_ERR_INVALID_TOKEN,
         JIG_ERR_MISPLACED_TOKEN,
+        JIG_ERR_RESERVED_NAME,
         JIG_ERR_BAD_RENAME,
         JIG_ERR_BAD_GRAPH_BEGIN,
         JIG_ERR_BAD_VERTEX_BEGIN,
