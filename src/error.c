@@ -27,13 +27,13 @@ int jig_internal_error_handle(jigError* errs, jigToken tok, int type) {
 }
 
 int jig_internal_error_check(jigError* errs, jigToken tok, int expect, int failtype) {
-    if      (tok.type == JIG_TOKEN_ERROR) return jig_internal_error_handle(errs, tok, JIG_ERR_INVALID_TOKEN);
+    if (tok.type == expect) return 0;
+    else if (tok.type == JIG_TOKEN_ERROR) return jig_internal_error_handle(errs, tok, JIG_ERR_INVALID_TOKEN);
     else if (tok.type == JIG_TOKEN_EOF)   return jig_internal_error_handle(errs, tok, JIG_ERR_EARLY_EOF);
     else if (expect == JIG_TOKEN_IDENT && tok.type == JIG_TOKEN_KEYWORD) {
         return jig_internal_error_handle(errs, tok, JIG_ERR_RESERVED_NAME);
     }
-    else if (tok.type != expect) return jig_internal_error_handle(errs, tok, failtype);
-    return 0;
+    return jig_internal_error_handle(errs, tok, failtype);
 }
 
 
@@ -55,6 +55,8 @@ const char* jig_error_to_string(jigErrorValue e) {
 
     case JIG_ERR_BAD_RENAME:
         return "'rename' declaration is malformed";
+    case JIG_ERR_BAD_DATABASE:
+        return "'database' declaration is malformed";
     case JIG_ERR_BAD_GRAPH_BEGIN:
         return "expected 'module' declaration";
     case JIG_ERR_BAD_VERTEX_BEGIN:
@@ -113,6 +115,8 @@ bool jig_error_is_critical(jigErrorValue e) {
         return true;
 
     case JIG_ERR_BAD_RENAME:
+        return true;
+    case JIG_ERR_BAD_DATABASE:
         return true;
     case JIG_ERR_BAD_GRAPH_BEGIN:
         return true;

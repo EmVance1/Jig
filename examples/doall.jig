@@ -1,9 +1,14 @@
 
 module Default
 
-rename BrianPrime => brp
 
-START = if (true) then
+database WORLD as w
+
+
+# rename BrianPrime as brp
+
+# START = if (w@ShimmyIntroScene.IsActive) then
+START = if (ShimmyIntroScene.IsActive) then
     <brp: "Oh hello there. Fancy a game of cards?", "It's good fun you know."> <Shimmy: "Go on mate, play a game with brian."> (
         "Love to. Names ${player} by the way." => happy
         "If that's what counts for fun around here." :: ( Brian.Suspicious = true, Brian.Alcohol += Whiskey.Strength, GotoEvent ) => chat
@@ -53,7 +58,7 @@ endmod
 
 module Other
 
-rename BrianPrime => brp
+rename BrianPrime as brp
 
 START = if (true) then
     <brp: "Oh hello there. Fancy a game of cards?", "It's good fun you know."> <Shimmy: "Go on mate, play a game with brian."> (

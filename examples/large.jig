@@ -1,7 +1,7 @@
 
 module Brian
 
-rename BrianPrime => brp
+rename BrianPrime as brp
 
 START = if (true) then
     <brp: "Oh hello there. Fancy a game of cards?", "It's good fun you know."> <Shimmy: "Go on mate, play a game with brian."> (
@@ -52,7 +52,7 @@ endmod
 
 module Lisa
 
-rename BrianPrime => brp
+rename BrianPrime as brp
 
 START = if (true) then
     <brp: "Oh hello there. Fancy a game of cards?", "It's good fun you know."> <Shimmy: "Go on mate, play a game with brian."> (
@@ -103,7 +103,7 @@ endmod
 
 module Jacob
 
-rename BrianPrime => brp
+rename BrianPrime as brp
 
 START = if (true) then
     <brp: "Oh hello there. Fancy a game of cards?", "It's good fun you know."> <Shimmy: "Go on mate, play a game with brian."> (
@@ -154,7 +154,7 @@ endmod
 
 module Sally
 
-rename BrianPrime => brp
+rename BrianPrime as brp
 
 START = if (true) then
     <brp: "Oh hello there. Fancy a game of cards?", "It's good fun you know."> <Shimmy: "Go on mate, play a game with brian."> (
@@ -205,7 +205,7 @@ endmod
 
 module John
 
-rename BrianPrime => brp
+rename BrianPrime as brp
 
 START = if (true) then
     <brp: "Oh hello there. Fancy a game of cards?", "It's good fun you know."> <Shimmy: "Go on mate, play a game with brian."> (
@@ -256,7 +256,7 @@ endmod
 
 module Paul
 
-rename BrianPrime => brp
+rename BrianPrime as brp
 
 START = if (true) then
     <brp: "Oh hello there. Fancy a game of cards?", "It's good fun you know."> <Shimmy: "Go on mate, play a game with brian."> (
@@ -307,7 +307,7 @@ endmod
 
 module Ringo
 
-rename BrianPrime => brp
+rename BrianPrime as brp
 
 START = if (true) then
     <brp: "Oh hello there. Fancy a game of cards?", "It's good fun you know."> <Shimmy: "Go on mate, play a game with brian."> (

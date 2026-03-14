@@ -30,7 +30,8 @@ static bool is_keyword(jigStrView str) {
         || (STREQ(str, "endmod"))
         || (STREQ(str, "rename"))
         || (STREQ(str, "database"))
-        || (STREQ(str, "as"));
+        || (STREQ(str, "as"))
+        || (STREQ(str, "extern"));
 }
 
 

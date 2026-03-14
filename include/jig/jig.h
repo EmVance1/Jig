@@ -26,6 +26,7 @@ typedef struct jigErrorValue {
         JIG_ERR_MISPLACED_TOKEN,
         JIG_ERR_RESERVED_NAME,
         JIG_ERR_BAD_RENAME,
+        JIG_ERR_BAD_DATABASE,
         JIG_ERR_BAD_GRAPH_BEGIN,
         JIG_ERR_BAD_VERTEX_BEGIN,
         JIG_ERR_BAD_VERTEX_BLOCK,

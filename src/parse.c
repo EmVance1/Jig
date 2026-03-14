@@ -73,7 +73,7 @@ static void parse_graph(jigParseCtx* ctx, jigGraph* result) {
                 EH_CHECK(init, IDENT, BAD_RENAME);
                 n = TNEXT(&ctx->tokens);
                 EH_CHECK(n, KEYWORD, BAD_RENAME);
-                if (STREQ(n.value, "as")) EH_FAIL(n, BAD_RENAME);
+                if (!STREQ(n.value, "as")) EH_FAIL(n, BAD_RENAME);
                 const jigToken alias = TNEXT(&ctx->tokens);
                 EH_CHECK(alias, IDENT, BAD_RENAME);
                 // result.rename_table.emplace(rend.value, init.value);
@@ -82,11 +82,12 @@ static void parse_graph(jigParseCtx* ctx, jigGraph* result) {
             // database NAME as ALIAS
             } else if (STREQ(n.value, "database")) {
                 const jigToken name = TNEXT(&ctx->tokens);
-                EH_CHECK(name, IDENT, BAD_RENAME);
+                EH_CHECK(name, IDENT, BAD_DATABASE);
                 n = TNEXT(&ctx->tokens);
-                if (STREQ(n.value, "as")) EH_FAIL(n, BAD_RENAME);
+                EH_CHECK(n, KEYWORD, BAD_DATABASE);
+                if (!STREQ(n.value, "as")) EH_FAIL(n, BAD_DATABASE);
                 const jigToken alias = TNEXT(&ctx->tokens);
-                EH_CHECK(alias, IDENT, BAD_RENAME);
+                EH_CHECK(alias, IDENT, BAD_DATABASE);
                 jigds_arrpush(result->databases, ((jigDatabase){ .name=name.value, .alias=alias.value }));
                 n = TNEXT(&ctx->tokens); // FOLLOWS(database)
                 continue;

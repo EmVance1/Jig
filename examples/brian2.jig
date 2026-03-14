@@ -1,0 +1,62 @@
+
+# misc/Games.jig
+#
+# module BrianGame(EWIN, ELOSE, EDRAW)
+#
+# START = <Brian: "Why don't you pick a card, any card."> (
+#     "*Pick high*" => pick
+#     "*Pick low*"  => pick
+# )
+#
+# pick = match (rng3) with
+#     (0) <Narrator: "*You draw an ace.*">            => EWIN
+#     (1) <Narrator: "*You draw a 3.*">               => ELOSE
+#     (_) <Narrator: "*You draw a 9. As did Brian.*"> => EDRAW
+# end
+#
+# endmod
+
+module Main()
+
+database WORLD as global
+database STATS as s
+
+game = extern "misc/Games.BrianGame" with (EXIT, EXIT, EXIT)
+
+
+START = if (ShimmyIntroScene.IsActive) then
+    <Brian: "Oh hello there. Fancy a game of cards?", "It's good fun you know."> <Shimmy: "Go on mate, play a game with brian."> (
+        "Love to. Names ${player} by the way." => happy
+        "If that's what counts for fun around here." :: ( Brian.Suspicious = true ) => chat
+    )
+else
+    <Brian: "Lovely spot this, don't you think?"> => EXIT
+end
+
+happy = <Brian: "Good on ye ${player}."> => game
+chat  = <Brian: "Ok slow down pal, you just got here. Where are you from?"> (
+    match (Player.Origin) with
+      (Origin.Twinvayne) "Twinvayne." => fasc
+      (Origin.Domali)    "Domali."    => fasc
+      (_)                "Nowhere."   => enig
+    end
+
+    "Your moms house." :: ( s@Brian.Approval -= 10 ) => rude
+)
+
+fasc = <Brian: "Fascinating.">   => game
+enig = <Brian: "How enigmatic."> => game
+rude = <Brian: "How rude.">      => game
+game = <Brian: "Why don't you pick a card, any card."> (
+    "*Pick high*" => pick
+    "*Pick low*"  => pick
+)
+
+pick = match (rng3) with
+    (0) <Narrator: "*You draw an ace.*">            => EXIT
+    (1) <Narrator: "*You draw a 3.*">               => EXIT
+    (_) <Narrator: "*You draw a 9. As did Brian.*"> => EXIT
+end
+
+endmod
+

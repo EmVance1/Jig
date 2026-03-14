@@ -18,7 +18,7 @@ static uint64_t* vm_ctx(uint32_t key, void* user_data) { (void)key; (void)user_d
 
 
 vango_test(cmp_example) {
-    char* src = read_to_string("examples/brian.jig");
+    char* src = read_to_string("examples/doall.jig");
     vg_assert_non_null(src);
     jigError errors = { 0 };
     jigFile* file = jig_file_compile_from_src(src, &errors, dummy_ctx, jig_malloc_allocator());
@@ -32,7 +32,7 @@ vango_test(cmp_example) {
         vg_assert(false);
     }
 
-    // jig_file_prettyprint(file, "Default", stdout);
+    jig_file_prettyprint(file, "Default", stdout);
     free(file);
 }
 
