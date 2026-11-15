@@ -22,14 +22,15 @@ endmod
 
 ### Brian.shmy
 
-# 'Brian' is a graph with no exit transitions
-module Brian()
-
-# ensures consistent global state
-require [ Player.Origin, Player.Class ]
+# 'Jim' is a graph with no exit transitions
+module Jim()
 
 # 'game' binds as opaque reference to Gambling.shmy/Brian, game -> START; eWin, eDraw, eLost -> EXIT
-game = import Gambling.Brian(EXIT, EXIT, EXIT)
+import module Gambling.Brian(EXIT, EXIT, EXIT) as game
+# declares storage object local to the script
+local database "L" as l
+# requests storage object from script owner, makes it default storage location
+import database "WORLD" as implied
 
 
 START = if (ShimmyIntroScene.IsActive && once) then

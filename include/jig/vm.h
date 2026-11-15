@@ -29,12 +29,16 @@ typedef struct jigProposition {
 #define JIG_VERTEX_START 0
 #define JIG_VERTEX_EXIT  UINT32_MAX
 
-typedef struct jigVm {
+typedef struct JigRuntimeCtx {
     jigProposition text[JIG_PROP_QUEUE_SIZE];
     uint64_t stack[JIG_VALUE_STACK_SIZE];
     uint32_t PC, SP;
     uint32_t TH, TT;
     uint32_t A,  B;
+} JigRuntimeCtx;
+
+typedef struct jigVm {
+    JigRuntimeCtx ctx;
     const uint8_t* base;
     const uint8_t* code;
     const uint8_t* strs;
@@ -46,9 +50,9 @@ const char* jig_vm_line(const jigVm* self);
 uint32_t    jig_vm_id(const jigVm* self);
 uint32_t    jig_vm_nq(const jigVm* self);
 
-void             jig_vm_push_value(jigVm* self, uint64_t val);
-uint64_t         jig_vm_pop_value(jigVm* self);
-uint64_t         jig_vm_top_value(const jigVm* self);
+void           jig_vm_push_value(jigVm* self, uint64_t val);
+uint64_t       jig_vm_pop_value(jigVm* self);
+uint64_t       jig_vm_top_value(const jigVm* self);
 jigProposition jig_vm_dequeue_text(jigVm* self);
 
 int jig_vm_exec(jigVm* self, jigVmCtx ctx, void* user_data);

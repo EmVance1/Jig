@@ -2,7 +2,7 @@
 name = "jig"
 version = "0.1.0"
 lang = "C99"
-kind = "staticlib"
+type = "staticlib"
 
 warn-level = "high"
 iso-compliant = true

@@ -1,5 +1,5 @@
 
-#if 0
+#if 1
 
 #define _CRT_SECURE_NO_WARNINGS
 #define _GNU_SOURCE
